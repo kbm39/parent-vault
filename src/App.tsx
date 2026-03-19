@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import type { Session } from '@supabase/supabase-js'
@@ -53,7 +53,7 @@ export default function App() {
         <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/" element={
           <ProtectedRoute session={session}>
-            <Layout session={session} />
+            <Layout session={session!} />
           </ProtectedRoute>
         }>
           <Route index element={<Dashboard session={session!} />} />

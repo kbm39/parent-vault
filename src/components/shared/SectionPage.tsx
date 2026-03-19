@@ -4,7 +4,6 @@ import type { LucideIcon } from 'lucide-react'
 import { Loader, AlertCircle } from 'lucide-react'
 import UploadDropZone from './UploadDropZone'
 import SectionCard from './SectionCard'
-import type { AccountEntry } from './SectionCard'
 import { useSectionData } from '../../hooks/useSectionData'
 
 interface FieldDef {
