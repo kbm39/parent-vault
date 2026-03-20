@@ -29,11 +29,15 @@ function logEvent(level, event, meta = {}) {
 }
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || ''
+const allowedFrontendOrigins = FRONTEND_ORIGIN
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean)
 const isDev = process.env.NODE_ENV !== 'production'
 
 function isAllowedOrigin(origin) {
   if (!origin) return true
-  if (FRONTEND_ORIGIN) return origin === FRONTEND_ORIGIN
+  if (allowedFrontendOrigins.length > 0) return allowedFrontendOrigins.includes(origin)
   if (isDev) return /^https?:\/\/localhost:\d+$/.test(origin)
   return false
 }
@@ -149,7 +153,8 @@ app.get('/health', (_req, res) => {
     service: 'parse-proxy',
     anthropicConfigured: Boolean(ANTHROPIC_KEY),
     supabaseAdminConfigured: Boolean(supabaseAdmin),
-    frontendOriginLocked: Boolean(FRONTEND_ORIGIN),
+    frontendOriginLocked: allowedFrontendOrigins.length > 0,
+    allowedFrontendOrigins,
   })
 })
 
