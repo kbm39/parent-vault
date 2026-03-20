@@ -21,9 +21,18 @@ function isEmailVerified(session: Session | null) {
   return Boolean(session.user.email_confirmed_at ?? session.user.confirmed_at)
 }
 
-function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
+function ProtectedRoute({
+  session,
+  mfaSatisfied,
+  children,
+}: {
+  session: Session | null
+  mfaSatisfied: boolean
+  children: React.ReactNode
+}) {
   if (!session) return <Navigate to="/login" replace />
   if (!isEmailVerified(session)) return <Navigate to="/login?verify=1" replace />
+  if (!mfaSatisfied) return <Navigate to="/login?mfa=1" replace />
 
   return <>{children}</>
 }
@@ -31,15 +40,34 @@ function ProtectedRoute({ session, children }: { session: Session | null; childr
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [mfaSatisfied, setMfaSatisfied] = useState(false)
   const emailVerified = isEmailVerified(session)
 
+  const refreshMfaState = async (nextSession: Session | null) => {
+    if (!nextSession) {
+      setMfaSatisfied(false)
+      return
+    }
+
+    const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+    if (error) {
+      setMfaSatisfied(false)
+      return
+    }
+
+    const satisfied = data.currentLevel === 'aal2' || data.nextLevel !== 'aal2'
+    setMfaSatisfied(satisfied)
+  }
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
+      await refreshMfaState(session)
       setLoading(false)
     })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
+      await refreshMfaState(session)
     })
     return () => subscription.unsubscribe()
   }, [])
@@ -58,9 +86,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={session && emailVerified ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/login" element={session && emailVerified && mfaSatisfied ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/" element={
-          <ProtectedRoute session={session}>
+          <ProtectedRoute session={session} mfaSatisfied={mfaSatisfied}>
             <Layout session={session!} />
           </ProtectedRoute>
         }>

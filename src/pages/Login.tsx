@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, FolderHeart, Users } from 'lucide-react'
 
+type MfaStep = 'none' | 'enroll' | 'verify'
+
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -10,6 +12,54 @@ export default function Login() {
   const [error, setError] = useState('')
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [successMsg, setSuccessMsg] = useState('')
+  const [mfaStep, setMfaStep] = useState<MfaStep>('none')
+  const [mfaFactorId, setMfaFactorId] = useState('')
+  const [mfaChallengeId, setMfaChallengeId] = useState('')
+  const [mfaQrSvg, setMfaQrSvg] = useState('')
+  const [mfaSecret, setMfaSecret] = useState('')
+  const [mfaCode, setMfaCode] = useState('')
+
+  const resetMfaFlow = () => {
+    setMfaStep('none')
+    setMfaFactorId('')
+    setMfaChallengeId('')
+    setMfaQrSvg('')
+    setMfaSecret('')
+    setMfaCode('')
+  }
+
+  const verifyMfaCode = async () => {
+    if (!mfaFactorId) {
+      setError('Missing MFA factor. Please sign in again.')
+      return
+    }
+    if (!mfaCode.trim()) {
+      setError('Enter the 6-digit code from your authenticator app.')
+      return
+    }
+
+    setError('')
+    setSuccessMsg('')
+    setLoading(true)
+    try {
+      const challengeId = mfaChallengeId || (await supabase.auth.mfa.challenge({ factorId: mfaFactorId })).data?.id
+      if (!challengeId) throw new Error('Could not start MFA verification. Please sign in again.')
+
+      const { error } = await supabase.auth.mfa.verify({
+        factorId: mfaFactorId,
+        challengeId,
+        code: mfaCode.trim(),
+      })
+      if (error) throw error
+
+      setSuccessMsg('Two-step verification complete. Signing you in...')
+      resetMfaFlow()
+    } catch (err: any) {
+      setError(err.message || 'Could not verify MFA code.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const resendVerification = async () => {
     if (!email) {
@@ -43,6 +93,37 @@ export default function Login() {
       if (mode === 'signin') {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
+
+        const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+        if (aalError) throw aalError
+
+        const needsMfa = aalData.nextLevel === 'aal2' && aalData.currentLevel !== 'aal2'
+        if (needsMfa) {
+          const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors()
+          if (factorsError) throw factorsError
+
+          const verifiedTotp = factorsData.totp.find((factor) => factor.status === 'verified')
+
+          if (verifiedTotp) {
+            const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id })
+            if (challengeError) throw challengeError
+
+            setMfaFactorId(verifiedTotp.id)
+            setMfaChallengeId(challengeData.id)
+            setMfaStep('verify')
+            setSuccessMsg('Enter the code from your authenticator app to finish sign in.')
+          } else {
+            const { data: enrollData, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+            if (enrollError) throw enrollError
+
+            setMfaFactorId(enrollData.id)
+            setMfaQrSvg(enrollData.totp.qr_code)
+            setMfaSecret(enrollData.totp.secret)
+            setMfaStep('enroll')
+            setSuccessMsg('Set up your authenticator app, then enter the 6-digit code.')
+          }
+          return
+        }
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
@@ -109,10 +190,14 @@ export default function Login() {
         <div className="relative">
           <div className="bg-white/88 border border-slate-200 rounded-[2rem] p-8 shadow-[0_30px_80px_rgba(148,163,184,0.24)] backdrop-blur-xl">
             <h2 className="text-lg font-semibold text-slate-900 mb-2">
-              {mode === 'signin' ? 'Sign in to your vault' : 'Create your vault'}
+              {mfaStep === 'none' ? (mode === 'signin' ? 'Sign in to your vault' : 'Create your vault') : 'Two-step verification'}
             </h2>
             <p className="text-sm text-slate-600 mb-6">
-              {mode === 'signin'
+              {mfaStep === 'enroll'
+                ? 'Scan this QR code in an authenticator app, then enter the 6-digit code to secure your account.'
+                : mfaStep === 'verify'
+                ? 'Enter the 6-digit code from your authenticator app to complete sign in.'
+                : mode === 'signin'
                 ? 'Pick up where you left off and keep everything in one secure, organized place.'
                 : 'Start building a clear record your family can rely on when it matters most.'}
             </p>
@@ -127,6 +212,7 @@ export default function Login() {
               <p className="text-teal-700 text-sm">{successMsg}</p>
             </div>
           )}
+          {mfaStep === 'none' ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
@@ -171,14 +257,75 @@ export default function Login() {
               {loading ? 'Please wait…' : mode === 'signin' ? 'Sign In' : 'Create Account'}
             </button>
           </form>
+          ) : (
+          <div className="space-y-4">
+            {mfaStep === 'enroll' && (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                {mfaQrSvg ? (
+                  <img
+                    src={`data:image/svg+xml;utf8,${encodeURIComponent(mfaQrSvg)}`}
+                    alt="Scan this QR code in your authenticator app"
+                    className="w-44 h-44 mx-auto rounded-lg border border-slate-200 bg-white p-2"
+                  />
+                ) : (
+                  <p className="text-sm text-slate-600">QR code unavailable. Use the setup key below.</p>
+                )}
+                {mfaSecret && (
+                  <div className="mt-3 text-center">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide">Manual setup key</p>
+                    <p className="text-sm text-slate-800 font-mono break-all mt-1">{mfaSecret}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Authenticator code</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={mfaCode}
+                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="123456"
+                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-teal-500 transition-colors"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={verifyMfaCode}
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 disabled:from-teal-400 disabled:to-cyan-400 text-white font-semibold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-teal-500/20"
+            >
+              {loading ? 'Verifying…' : 'Verify and Continue'}
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                await supabase.auth.signOut()
+                resetMfaFlow()
+                setSuccessMsg('')
+                setError('')
+              }}
+              className="w-full text-sm text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              Start over
+            </button>
+          </div>
+          )}
           <div className="mt-5 text-center">
+            {mfaStep === 'none' && (
             <button
               onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setSuccessMsg('') }}
               className="text-sm text-slate-600 hover:text-teal-700 transition-colors"
             >
               {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
-            {mode === 'signin' && (
+            )}
+            {mfaStep === 'none' && mode === 'signin' && (
               <button
                 type="button"
                 onClick={resendVerification}
