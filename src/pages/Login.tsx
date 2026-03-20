@@ -203,7 +203,7 @@ export default function Login() {
           setMfaSecret(enrollData.totp.secret)
           setPendingRecoveryCodes(generatedCodes)
           setMfaStep('enroll')
-          setSuccessMsg('No text or email code is sent. Open your authenticator app, then enter the 6-digit code it generates.')
+          setSuccessMsg('No text or email code is sent. Open Google Authenticator, Microsoft Authenticator, Authy, or Apple Passwords, then enter the 6-digit code it generates.')
         }
 
         return
@@ -292,7 +292,7 @@ export default function Login() {
             </h2>
             <p className="text-sm text-slate-600 mb-6">
               {mfaStep === 'enroll'
-                ? 'Scan this QR code in an authenticator app. The app generates the 6-digit code you enter below.'
+                ? 'Scan this QR code in an authenticator app. Google Authenticator, Microsoft Authenticator, Authy, or Apple Passwords will generate the 6-digit code you enter below.'
                 : mfaStep === 'verify'
                 ? 'Enter the 6-digit code from your authenticator app to complete sign in. No code is sent by text or email.'
                 : mode === 'signin'
@@ -370,12 +370,13 @@ export default function Login() {
                   <p className="text-sm text-slate-600">QR code unavailable. Use the setup key below.</p>
                 )}
                 {mfaQrFailed && (
-                  <p className="mt-3 text-sm text-slate-600 text-center">QR image could not be displayed in this browser. Use the manual setup key below in Google Authenticator, Microsoft Authenticator, or Authy.</p>
+                  <p className="mt-3 text-sm text-slate-600 text-center">QR image could not be displayed in this browser. Use the manual setup key below in Google Authenticator, Microsoft Authenticator, Authy, or Apple Passwords.</p>
                 )}
                 {mfaSecret && (
                   <div className="mt-3 text-center">
                     <p className="text-xs text-slate-500 uppercase tracking-wide">Manual setup key</p>
                     <p className="text-sm text-slate-800 font-mono break-all mt-1">{mfaSecret}</p>
+                    <p className="mt-2 text-xs leading-5 text-slate-500">On iPhone, you can open Passwords, choose Set Up Verification Code, and enter this key manually.</p>
                   </div>
                 )}
                 {pendingRecoveryCodes.length > 0 && (
