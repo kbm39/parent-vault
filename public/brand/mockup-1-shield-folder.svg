@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" fill="none">
+  <rect width="640" height="420" rx="36" fill="#F8FBFF"/>
+  <rect x="36" y="36" width="568" height="348" rx="28" fill="white" stroke="#D9E6F2"/>
+  <g transform="translate(74 84)">
+    <rect x="0" y="0" width="112" height="112" rx="32" fill="url(#a)"/>
+    <path d="M56 23 87 36v31c0 27-18 51-31 58-13-7-31-31-31-58V36l31-13Z" fill="#F7FBFF"/>
+    <path d="M42 55h31a6 6 0 0 1 6 6v15H36V61a6 6 0 0 1 6-6Z" fill="#15B7A6"/>
+    <path d="M36 56v-6a7 7 0 0 1 7-7h13l5 6h18" stroke="#0E766E" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="214" y="142" fill="#10233F" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="800">Parent Vault</text>
+  <text x="214" y="184" fill="#54708E" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="500">Secure family records, beautifully organized</text>
+  <text x="74" y="264" fill="#10233F" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="20" font-weight="700">Concept 1</text>
+  <text x="74" y="298" fill="#5D728B" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="18">Shield + folder mark</text>
+  <text x="74" y="326" fill="#5D728B" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="18">Best for trust, clarity, and fast recognition</text>
+  <defs>
+    <linearGradient id="a" x1="12" y1="12" x2="98" y2="104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14B8A6"/>
+      <stop offset="1" stop-color="#22C7E8"/>
+    </linearGradient>
+  </defs>
+</svg>

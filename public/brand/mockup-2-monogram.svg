@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" fill="none">
+  <rect width="640" height="420" rx="36" fill="#F6FAFD"/>
+  <rect x="36" y="36" width="568" height="348" rx="28" fill="white" stroke="#D9E6F2"/>
+  <g transform="translate(74 84)">
+    <rect x="0" y="0" width="112" height="112" rx="30" fill="#10233F"/>
+    <rect x="18" y="18" width="76" height="76" rx="20" fill="url(#a)" opacity="0.18"/>
+    <path d="M30 82V30h22c16 0 25 8 25 21 0 14-10 24-28 24H41" stroke="#F8FBFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M68 32 82 82 96 32" stroke="#4DD6C8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="214" y="142" fill="#10233F" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="800">Parent Vault</text>
+  <text x="214" y="184" fill="#54708E" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="500">Premium planning for the people you trust most</text>
+  <text x="74" y="264" fill="#10233F" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="20" font-weight="700">Concept 2</text>
+  <text x="74" y="298" fill="#5D728B" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="18">Simplified PV badge</text>
+  <text x="74" y="326" fill="#5D728B" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="18">Cleaner separation so the V reads clearly at smaller sizes</text>
+  <defs>
+    <linearGradient id="a" x1="18" y1="18" x2="94" y2="94" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4DD6C8"/>
+      <stop offset="1" stop-color="#22C7E8"/>
+    </linearGradient>
+  </defs>
+</svg>

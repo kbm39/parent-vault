@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Vault, Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, FolderHeart, Users } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, FolderHeart, Users } from 'lucide-react'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -68,12 +68,7 @@ export default function Login() {
       </div>
       <div className="relative w-full max-w-6xl grid lg:grid-cols-[1.15fr_0.85fr] gap-6 lg:gap-8 items-stretch">
         <section className="rounded-[2rem] border border-white/70 bg-white/75 backdrop-blur-xl shadow-[0_30px_80px_rgba(148,163,184,0.22)] p-8 sm:p-10 lg:p-12">
-          <div className="inline-flex items-center gap-3 rounded-full bg-teal-50 border border-teal-100 px-4 py-2 text-sm font-medium text-teal-700">
-            <div className="inline-flex items-center justify-center w-9 h-9 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-500 shadow-lg shadow-teal-500/20">
-              <Vault className="w-5 h-5 text-white" />
-            </div>
-            Parent Vault
-          </div>
+          <img src="/logo-wordmark.svg" alt="Parent Vault" className="h-14 sm:h-16 w-auto" />
 
           <div className="mt-8 max-w-2xl">
             <p className="text-sm font-semibold tracking-[0.2em] uppercase text-slate-500">Prepared for real life</p>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="420" height="112" viewBox="0 0 420 112" fill="none">
+  <rect width="420" height="112" rx="28" fill="none"/>
+  <g transform="translate(0 0)">
+    <rect x="0" y="0" width="84" height="84" rx="24" fill="#10233F"/>
+    <rect x="14" y="14" width="56" height="56" rx="18" fill="url(#a)" opacity="0.14"/>
+    <path d="M20 60V22h17c12 0 19 6 19 16 0 11-8 19-21 19H28" stroke="#F8FBFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M49 24 61 60 73 24" stroke="#4DD6C8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text x="104" y="39" fill="#10233F" font-family="Plus Jakarta Sans, Avenir Next, Segoe UI, sans-serif" font-size="28" font-weight="800">Parent Vault</text>
+  <text x="104" y="69" fill="#5D728B" font-family="Plus Jakarta Sans, Avenir Next, Segoe UI, sans-serif" font-size="16" font-weight="500">Premium planning for the people you trust most</text>
+  <defs>
+    <linearGradient id="a" x1="14" y1="14" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4DD6C8"/>
+      <stop offset="1" stop-color="#22C7E8"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" fill="none">
+  <rect width="640" height="420" rx="36" fill="#F7FBFF"/>
+  <rect x="36" y="36" width="568" height="348" rx="28" fill="white" stroke="#D9E6F2"/>
+  <g transform="translate(74 84)">
+    <rect x="0" y="0" width="112" height="112" rx="32" fill="#ECF8F7" stroke="#BDEAE3"/>
+    <path d="M26 58 56 32l30 26v30H62V66H50v22H26V58Z" fill="#14B8A6"/>
+    <path d="M56 76c8-8 18-13 18-22 0-6-4-10-10-10-4 0-6 2-8 5-2-3-4-5-8-5-6 0-10 4-10 10 0 9 10 14 18 22Z" fill="#FF6B7A"/>
+  </g>
+  <text x="214" y="142" fill="#10233F" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="44" font-weight="800">Parent Vault</text>
+  <text x="214" y="184" fill="#54708E" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="22" font-weight="500">Care, continuity, and access when family needs it most</text>
+  <text x="74" y="264" fill="#10233F" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="20" font-weight="700">Concept 3</text>
+  <text x="74" y="298" fill="#5D728B" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="18">Home + heart + care mark</text>
+  <text x="74" y="326" fill="#5D728B" font-family="Plus Jakarta Sans, Arial, sans-serif" font-size="18">Best for warmth, family, and emotional connection</text>
+</svg>

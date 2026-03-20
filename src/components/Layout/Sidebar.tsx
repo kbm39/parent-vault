@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 import {
   LayoutDashboard, User, Heart, Wallet, Receipt, Scale,
-  Home, Shield, KeyRound, Globe, BookUser, LogOut, Vault, X
+  Home, Shield, KeyRound, Globe, BookUser, LogOut, X
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -52,9 +52,7 @@ export default function Sidebar({ session, open, onClose }: SidebarProps) {
       `}>
         <div className="flex items-center justify-between px-5 py-5 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
-              <Vault className="w-5 h-5 text-white" />
-            </div>
+            <img src="/logo-mark.svg" alt="Parent Vault" className="w-9 h-9 rounded-xl shadow-lg shadow-teal-500/15" />
             <div>
               <p className="text-slate-900 font-bold text-sm tracking-wide leading-none">Parent Vault</p>
               <p className="text-teal-700 text-xs mt-0.5 truncate max-w-[120px]">{session.user.email}</p>
