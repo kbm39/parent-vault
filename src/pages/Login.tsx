@@ -94,36 +94,31 @@ export default function Login() {
         const { error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
 
-        const { data: aalData, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-        if (aalError) throw aalError
+        const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors()
+        if (factorsError) throw factorsError
 
-        const needsMfa = aalData.nextLevel === 'aal2' && aalData.currentLevel !== 'aal2'
-        if (needsMfa) {
-          const { data: factorsData, error: factorsError } = await supabase.auth.mfa.listFactors()
-          if (factorsError) throw factorsError
+        const verifiedTotp = factorsData.totp.find((factor) => factor.status === 'verified')
 
-          const verifiedTotp = factorsData.totp.find((factor) => factor.status === 'verified')
+        if (verifiedTotp) {
+          const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id })
+          if (challengeError) throw challengeError
 
-          if (verifiedTotp) {
-            const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id })
-            if (challengeError) throw challengeError
+          setMfaFactorId(verifiedTotp.id)
+          setMfaChallengeId(challengeData.id)
+          setMfaStep('verify')
+          setSuccessMsg('Enter the code from your authenticator app to finish sign in.')
+        } else {
+          const { data: enrollData, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
+          if (enrollError) throw enrollError
 
-            setMfaFactorId(verifiedTotp.id)
-            setMfaChallengeId(challengeData.id)
-            setMfaStep('verify')
-            setSuccessMsg('Enter the code from your authenticator app to finish sign in.')
-          } else {
-            const { data: enrollData, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
-            if (enrollError) throw enrollError
-
-            setMfaFactorId(enrollData.id)
-            setMfaQrSvg(enrollData.totp.qr_code)
-            setMfaSecret(enrollData.totp.secret)
-            setMfaStep('enroll')
-            setSuccessMsg('Set up your authenticator app, then enter the 6-digit code.')
-          }
-          return
+          setMfaFactorId(enrollData.id)
+          setMfaQrSvg(enrollData.totp.qr_code)
+          setMfaSecret(enrollData.totp.secret)
+          setMfaStep('enroll')
+          setSuccessMsg('Set up your authenticator app, then enter the 6-digit code.')
         }
+
+        return
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error

@@ -55,8 +55,7 @@ export default function App() {
       return
     }
 
-    const satisfied = data.currentLevel === 'aal2' || data.nextLevel !== 'aal2'
-    setMfaSatisfied(satisfied)
+    setMfaSatisfied(data.currentLevel === 'aal2')
   }
 
   useEffect(() => {
