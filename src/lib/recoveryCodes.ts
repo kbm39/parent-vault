@@ -24,13 +24,25 @@ export async function hashRecoveryCode(code: string) {
 }
 
 export function markRecoveryMfaSatisfied(userId: string) {
-  sessionStorage.setItem(RECOVERY_MARKER_KEY, userId)
+  try {
+    sessionStorage.setItem(RECOVERY_MARKER_KEY, userId)
+  } catch {
+    // Ignore storage failures in restricted browser contexts.
+  }
 }
 
 export function clearRecoveryMfaMarker() {
-  sessionStorage.removeItem(RECOVERY_MARKER_KEY)
+  try {
+    sessionStorage.removeItem(RECOVERY_MARKER_KEY)
+  } catch {
+    // Ignore storage failures in restricted browser contexts.
+  }
 }
 
 export function hasRecoveryMfaMarker(userId: string) {
-  return sessionStorage.getItem(RECOVERY_MARKER_KEY) === userId
+  try {
+    return sessionStorage.getItem(RECOVERY_MARKER_KEY) === userId
+  } catch {
+    return false
+  }
 }

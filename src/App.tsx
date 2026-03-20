@@ -45,29 +45,41 @@ export default function App() {
   const emailVerified = isEmailVerified(session)
 
   const refreshMfaState = async (nextSession: Session | null) => {
-    if (!nextSession) {
+    try {
+      if (!nextSession) {
+        setMfaSatisfied(false)
+        clearRecoveryMfaMarker()
+        return
+      }
+
+      const recoverySatisfied = hasRecoveryMfaMarker(nextSession.user.id)
+
+      const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      if (error) {
+        setMfaSatisfied(recoverySatisfied)
+        return
+      }
+
+      setMfaSatisfied(data.currentLevel === 'aal2' || recoverySatisfied)
+    } catch {
       setMfaSatisfied(false)
-      clearRecoveryMfaMarker()
-      return
     }
-
-    const recoverySatisfied = hasRecoveryMfaMarker(nextSession.user.id)
-
-    const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
-    if (error) {
-      setMfaSatisfied(recoverySatisfied)
-      return
-    }
-
-    setMfaSatisfied(data.currentLevel === 'aal2' || recoverySatisfied)
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session)
-      await refreshMfaState(session)
-      setLoading(false)
-    })
+    supabase.auth
+      .getSession()
+      .then(async ({ data: { session } }) => {
+        setSession(session)
+        await refreshMfaState(session)
+      })
+      .catch(() => {
+        setSession(null)
+        setMfaSatisfied(false)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       await refreshMfaState(session)
