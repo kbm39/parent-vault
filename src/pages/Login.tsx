@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import QRCode from 'qrcode'
 import { supabase } from '../lib/supabase'
 import { generateRecoveryCodes, hashRecoveryCode, markRecoveryMfaSatisfied, normalizeRecoveryCode } from '../lib/recoveryCodes'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, FolderHeart, Users } from 'lucide-react'
@@ -16,7 +17,7 @@ export default function Login() {
   const [mfaStep, setMfaStep] = useState<MfaStep>('none')
   const [mfaFactorId, setMfaFactorId] = useState('')
   const [mfaChallengeId, setMfaChallengeId] = useState('')
-  const [mfaQrSvg, setMfaQrSvg] = useState('')
+  const [mfaQrImageUrl, setMfaQrImageUrl] = useState('')
   const [mfaQrFailed, setMfaQrFailed] = useState(false)
   const [mfaSecret, setMfaSecret] = useState('')
   const [mfaCode, setMfaCode] = useState('')
@@ -28,7 +29,7 @@ export default function Login() {
     setMfaStep('none')
     setMfaFactorId('')
     setMfaChallengeId('')
-    setMfaQrSvg('')
+    setMfaQrImageUrl('')
     setMfaQrFailed(false)
     setMfaSecret('')
     setMfaCode('')
@@ -159,6 +160,30 @@ export default function Login() {
     }
   }
 
+  const buildFallbackTotpUri = (secret: string) => {
+    const issuer = 'Parent Vault'
+    const accountName = email || 'Parent Vault user'
+    return `otpauth://totp/${encodeURIComponent(`${issuer}:${accountName}`)}?secret=${encodeURIComponent(secret)}&issuer=${encodeURIComponent(issuer)}`
+  }
+
+  const createQrImage = async (secret: string, totpUri?: string) => {
+    try {
+      const imageUrl = await QRCode.toDataURL(totpUri || buildFallbackTotpUri(secret), {
+        width: 220,
+        margin: 1,
+        color: {
+          dark: '#0f172a',
+          light: '#ffffff',
+        },
+      })
+      setMfaQrImageUrl(imageUrl)
+      setMfaQrFailed(false)
+    } catch {
+      setMfaQrImageUrl('')
+      setMfaQrFailed(true)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -196,14 +221,14 @@ export default function Login() {
           if (enrollError) throw enrollError
 
           const generatedCodes = generateRecoveryCodes()
+          const totpUri = (enrollData.totp as { uri?: string }).uri
 
           setMfaFactorId(enrollData.id)
-          setMfaQrSvg(enrollData.totp.qr_code)
-          setMfaQrFailed(false)
           setMfaSecret(enrollData.totp.secret)
           setPendingRecoveryCodes(generatedCodes)
           setMfaStep('enroll')
           setSuccessMsg('No text or email code is sent. Open Google Authenticator, Microsoft Authenticator, Authy, or Apple Passwords, then enter the 6-digit code it generates.')
+          await createQrImage(enrollData.totp.secret, totpUri)
         }
 
         return
@@ -223,19 +248,6 @@ export default function Login() {
       }
     } finally {
       setLoading(false)
-    }
-  }
-
-  const buildQrDataUrl = (svg: string) => {
-    try {
-      const utf8 = new TextEncoder().encode(svg)
-      let binary = ''
-      utf8.forEach((byte) => {
-        binary += String.fromCharCode(byte)
-      })
-      return `data:image/svg+xml;base64,${btoa(binary)}`
-    } catch {
-      return ''
     }
   }
 
@@ -359,9 +371,9 @@ export default function Login() {
           <div className="space-y-4">
             {mfaStep === 'enroll' && (
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                {mfaQrSvg ? (
+                {mfaQrImageUrl ? (
                   <img
-                    src={buildQrDataUrl(mfaQrSvg)}
+                    src={mfaQrImageUrl}
                     alt="Scan this QR code in your authenticator app"
                     onError={() => setMfaQrFailed(true)}
                     className="w-44 h-44 mx-auto rounded-lg border border-slate-200 bg-white p-2"
