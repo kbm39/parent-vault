@@ -173,6 +173,7 @@ export default function Login() {
         if (factorsError) throw factorsError
 
         const verifiedTotp = factorsData.totp.find((factor) => factor.status === 'verified')
+        const unverifiedTotp = factorsData.totp.filter((factor) => factor.status !== 'verified')
 
         if (verifiedTotp) {
           const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({ factorId: verifiedTotp.id })
@@ -184,6 +185,13 @@ export default function Login() {
           setUseRecoveryCode(false)
           setSuccessMsg('Enter the code from your authenticator app to finish sign in.')
         } else {
+          if (unverifiedTotp.length > 0) {
+            // Clean up stale/incomplete enrollments so users can restart MFA setup.
+            for (const factor of unverifiedTotp) {
+              await supabase.auth.mfa.unenroll({ factorId: factor.id })
+            }
+          }
+
           const { data: enrollData, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
           if (enrollError) throw enrollError
 
@@ -208,6 +216,8 @@ export default function Login() {
       const message = err?.message || 'An error occurred'
       if (/email.*not.*confirm/i.test(message)) {
         setError('Your email is not verified yet. Please check your inbox for the confirmation email.')
+      } else if (/friendly name.*already exists/i.test(message)) {
+        setError('Your previous authenticator setup was incomplete. Please tap Sign In again to restart MFA setup.')
       } else {
         setError(message)
       }
