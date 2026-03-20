@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase'
 import type { Session } from '@supabase/supabase-js'
+import { clearRecoveryMfaMarker, hasRecoveryMfaMarker } from './lib/recoveryCodes'
 import Layout from './components/Layout/Layout'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
@@ -46,16 +47,19 @@ export default function App() {
   const refreshMfaState = async (nextSession: Session | null) => {
     if (!nextSession) {
       setMfaSatisfied(false)
+      clearRecoveryMfaMarker()
       return
     }
+
+    const recoverySatisfied = hasRecoveryMfaMarker(nextSession.user.id)
 
     const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
     if (error) {
-      setMfaSatisfied(false)
+      setMfaSatisfied(recoverySatisfied)
       return
     }
 
-    setMfaSatisfied(data.currentLevel === 'aal2')
+    setMfaSatisfied(data.currentLevel === 'aal2' || recoverySatisfied)
   }
 
   useEffect(() => {

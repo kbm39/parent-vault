@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { generateRecoveryCodes, hashRecoveryCode, markRecoveryMfaSatisfied, normalizeRecoveryCode } from '../lib/recoveryCodes'
 import { Mail, Lock, Eye, EyeOff, AlertCircle, ShieldCheck, FolderHeart, Users } from 'lucide-react'
 
 type MfaStep = 'none' | 'enroll' | 'verify'
@@ -18,6 +19,9 @@ export default function Login() {
   const [mfaQrSvg, setMfaQrSvg] = useState('')
   const [mfaSecret, setMfaSecret] = useState('')
   const [mfaCode, setMfaCode] = useState('')
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false)
+  const [recoveryCode, setRecoveryCode] = useState('')
+  const [pendingRecoveryCodes, setPendingRecoveryCodes] = useState<string[]>([])
 
   const resetMfaFlow = () => {
     setMfaStep('none')
@@ -26,6 +30,9 @@ export default function Login() {
     setMfaQrSvg('')
     setMfaSecret('')
     setMfaCode('')
+    setUseRecoveryCode(false)
+    setRecoveryCode('')
+    setPendingRecoveryCodes([])
   }
 
   const verifyMfaCode = async () => {
@@ -52,10 +59,76 @@ export default function Login() {
       })
       if (error) throw error
 
+      if (mfaStep === 'enroll' && pendingRecoveryCodes.length > 0) {
+        const { data: userData, error: userError } = await supabase.auth.getUser()
+        if (userError) throw userError
+        const user = userData.user
+        if (!user) throw new Error('No active session. Please sign in again.')
+
+        const hashedCodes = await Promise.all(pendingRecoveryCodes.map((code) => hashRecoveryCode(code)))
+        const { error: updateError } = await supabase.auth.updateUser({
+          data: {
+            ...(user.user_metadata || {}),
+            mfa_recovery_hashes: hashedCodes,
+          },
+        })
+        if (updateError) throw updateError
+      }
+
       setSuccessMsg('Two-step verification complete. Signing you in...')
       resetMfaFlow()
     } catch (err: any) {
       setError(err.message || 'Could not verify MFA code.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const verifyRecoveryCode = async () => {
+    if (!recoveryCode.trim()) {
+      setError('Enter one of your recovery codes.')
+      return
+    }
+
+    setError('')
+    setSuccessMsg('')
+    setLoading(true)
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser()
+      if (userError) throw userError
+
+      const user = userData.user
+      if (!user) throw new Error('No active session. Please sign in again.')
+
+      const storedHashes = Array.isArray(user.user_metadata?.mfa_recovery_hashes)
+        ? (user.user_metadata.mfa_recovery_hashes as string[])
+        : []
+
+      if (!storedHashes.length) {
+        throw new Error('No recovery codes found. Sign in with your authenticator app.')
+      }
+
+      const hashedInput = await hashRecoveryCode(recoveryCode)
+      const remainingHashes = storedHashes.filter((hash) => hash !== hashedInput)
+      const codeMatched = remainingHashes.length !== storedHashes.length
+
+      if (!codeMatched) {
+        throw new Error('Recovery code is invalid or already used.')
+      }
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        data: {
+          ...(user.user_metadata || {}),
+          mfa_recovery_hashes: remainingHashes,
+        },
+      })
+      if (updateError) throw updateError
+
+      markRecoveryMfaSatisfied(user.id)
+      setSuccessMsg('Recovery code accepted. You are signed in. Reconnect an authenticator app soon.')
+      resetMfaFlow()
+    } catch (err: any) {
+      setError(err.message || 'Could not verify recovery code.')
     } finally {
       setLoading(false)
     }
@@ -106,16 +179,20 @@ export default function Login() {
           setMfaFactorId(verifiedTotp.id)
           setMfaChallengeId(challengeData.id)
           setMfaStep('verify')
+          setUseRecoveryCode(false)
           setSuccessMsg('Enter the code from your authenticator app to finish sign in.')
         } else {
           const { data: enrollData, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp' })
           if (enrollError) throw enrollError
 
+          const generatedCodes = generateRecoveryCodes()
+
           setMfaFactorId(enrollData.id)
           setMfaQrSvg(enrollData.totp.qr_code)
           setMfaSecret(enrollData.totp.secret)
+          setPendingRecoveryCodes(generatedCodes)
           setMfaStep('enroll')
-          setSuccessMsg('Set up your authenticator app, then enter the 6-digit code.')
+          setSuccessMsg('Set up your authenticator app, save your recovery codes, then enter the 6-digit code.')
         }
 
         return
@@ -271,31 +348,70 @@ export default function Login() {
                     <p className="text-sm text-slate-800 font-mono break-all mt-1">{mfaSecret}</p>
                   </div>
                 )}
+                {pendingRecoveryCodes.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">Recovery codes</p>
+                    <p className="mt-1 text-xs text-amber-800">Save these one-time backup codes now. Each code works once if you lose your authenticator app.</p>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                      {pendingRecoveryCodes.map((code) => (
+                        <p key={code} className="rounded-lg bg-white border border-amber-200 px-2 py-1 text-center text-xs font-mono text-slate-800">
+                          {code}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Authenticator code</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={mfaCode}
-                onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="123456"
-                className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-teal-500 transition-colors"
-              />
-            </div>
+            {useRecoveryCode ? (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Recovery code</label>
+                <input
+                  type="text"
+                  value={recoveryCode}
+                  onChange={(e) => setRecoveryCode(normalizeRecoveryCode(e.target.value).slice(0, 8))}
+                  placeholder="ABCD1234"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-teal-500 transition-colors font-mono"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Authenticator code</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={6}
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="123456"
+                  className="w-full bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-900 placeholder-slate-400 text-sm focus:outline-none focus:border-teal-500 transition-colors"
+                />
+              </div>
+            )}
 
             <button
               type="button"
-              onClick={verifyMfaCode}
+              onClick={useRecoveryCode ? verifyRecoveryCode : verifyMfaCode}
               disabled={loading}
               className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 disabled:from-teal-400 disabled:to-cyan-400 text-white font-semibold py-3 rounded-xl transition-colors text-sm shadow-lg shadow-teal-500/20"
             >
-              {loading ? 'Verifying…' : 'Verify and Continue'}
+              {loading ? 'Verifying…' : useRecoveryCode ? 'Use Recovery Code' : 'Verify and Continue'}
             </button>
+
+            {mfaStep === 'verify' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setUseRecoveryCode((prev) => !prev)
+                  setError('')
+                }}
+                className="w-full text-sm text-slate-600 hover:text-slate-900 transition-colors"
+              >
+                {useRecoveryCode ? 'Use authenticator code instead' : 'Use a recovery code instead'}
+              </button>
+            )}
 
             <button
               type="button"
