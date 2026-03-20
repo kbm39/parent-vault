@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { Download, Wallet } from 'lucide-react'
+import { jsPDF } from 'jspdf'
 import SectionPage from '../shared/SectionPage'
 import type { AccountEntry } from '../shared/SectionCard'
 
@@ -96,6 +97,65 @@ function downloadBalanceSheet(entries: AccountEntry[]) {
   URL.revokeObjectURL(url)
 }
 
+function downloadBalanceSheetPdf(entries: AccountEntry[]) {
+  const sheet = buildBalanceSheet(entries)
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' })
+
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const leftCol = 48
+  const rightCol = pageWidth / 2 + 16
+  const rowHeight = 14
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(16)
+  doc.text('Parent Vault Balance Sheet', 48, 44)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(10)
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 48, 60)
+
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(11)
+  doc.text(`Total Assets: ${formatCurrency(sheet.totalAssets)}`, 48, 86)
+  doc.text(`Total Liabilities: ${formatCurrency(sheet.totalLiabilities)}`, 48, 102)
+  doc.text(`Net Worth: ${formatCurrency(sheet.netWorth)}`, 48, 118)
+
+  doc.setFont('helvetica', 'bold')
+  doc.text('Assets', leftCol, 148)
+  doc.text('Liabilities', rightCol, 148)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+
+  const assetsLines = sheet.assets.map((item) => `${item.label} (${item.institution || 'N/A'}): ${formatCurrency(item.amount)}`)
+  const liabilityLines = sheet.liabilities.map((item) => `${item.label} (${item.institution || 'N/A'}): ${formatCurrency(item.amount)}`)
+
+  const maxRows = 34
+  const assetsToRender = assetsLines.slice(0, maxRows)
+  const liabilitiesToRender = liabilityLines.slice(0, maxRows)
+
+  assetsToRender.forEach((line, index) => {
+    doc.text(line, leftCol, 166 + rowHeight * index, { maxWidth: pageWidth / 2 - 70 })
+  })
+
+  liabilitiesToRender.forEach((line, index) => {
+    doc.text(line, rightCol, 166 + rowHeight * index, { maxWidth: pageWidth / 2 - 64 })
+  })
+
+  doc.setFont('helvetica', 'italic')
+  doc.setFontSize(8)
+
+  if (assetsLines.length > maxRows) {
+    doc.text(`Assets truncated: showing ${maxRows} of ${assetsLines.length}.`, leftCol, 660)
+  }
+  if (liabilityLines.length > maxRows) {
+    doc.text(`Liabilities truncated: showing ${maxRows} of ${liabilityLines.length}.`, rightCol, 660)
+  }
+
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+  doc.save(`balance-sheet-${stamp}.pdf`)
+}
+
 export default function Finances({ session }: { session: Session }) {
   return (
     <SectionPage
@@ -114,14 +174,24 @@ export default function Finances({ session }: { session: Session }) {
                 <p className="text-sm font-semibold text-slate-900">Balance Sheet Snapshot</p>
                 <p className="text-xs text-slate-600">Auto-calculated from your financial entries. This does not change saved records.</p>
               </div>
-              <button
-                type="button"
-                onClick={() => downloadBalanceSheet(entries)}
-                className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Export Balance Sheet
-              </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => downloadBalanceSheet(entries)}
+                  className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export JSON
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadBalanceSheetPdf(entries)}
+                  className="inline-flex items-center justify-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  Export One-Page PDF
+                </button>
+              </div>
             </div>
 
             <div className="mt-4 grid sm:grid-cols-3 gap-3">
