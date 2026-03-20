@@ -44,6 +44,16 @@ export default function App() {
   const [mfaSatisfied, setMfaSatisfied] = useState(false)
   const emailVerified = isEmailVerified(session)
 
+  const getAalWithTimeout = async () => {
+    const timeoutMs = 4000
+    return Promise.race([
+      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      new Promise<{ data: null; error: Error }>((resolve) => {
+        setTimeout(() => resolve({ data: null, error: new Error('MFA assurance timeout') }), timeoutMs)
+      }),
+    ])
+  }
+
   const refreshMfaState = async (nextSession: Session | null) => {
     try {
       if (!nextSession) {
@@ -54,7 +64,7 @@ export default function App() {
 
       const recoverySatisfied = hasRecoveryMfaMarker(nextSession.user.id)
 
-      const { data, error } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+      const { data, error } = await getAalWithTimeout()
       if (error) {
         setMfaSatisfied(recoverySatisfied)
         return
@@ -67,24 +77,33 @@ export default function App() {
   }
 
   useEffect(() => {
-    supabase.auth
-      .getSession()
-      .then(async ({ data: { session } }) => {
+    let cancelled = false
+
+    ;(async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (cancelled) return
+
         setSession(session)
-        await refreshMfaState(session)
-      })
-      .catch(() => {
+        setLoading(false)
+        void refreshMfaState(session)
+      } catch {
+        if (cancelled) return
         setSession(null)
         setMfaSatisfied(false)
-      })
-      .finally(() => {
         setLoading(false)
-      })
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      }
+    })()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
-      await refreshMfaState(session)
+      void refreshMfaState(session)
     })
-    return () => subscription.unsubscribe()
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   if (loading) {
