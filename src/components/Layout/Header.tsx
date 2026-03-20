@@ -26,80 +26,90 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const page = TITLES[pathname] ?? { label: 'Parent Vault', description: '' }
 
   return (
-    <header className="h-16 bg-slate-900/80 backdrop-blur border-b border-slate-800 flex items-center px-4 lg:px-6 gap-4 sticky top-0 z-10">
+    <header className="h-16 bg-white/75 backdrop-blur border-b border-slate-200 flex items-center px-4 lg:px-6 gap-4 sticky top-0 z-10">
       <button
         onClick={onMenuClick}
-        className="lg:hidden text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+        className="lg:hidden text-slate-500 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
       >
         <Menu className="w-5 h-5" />
       </button>
 
       <div className="flex-1 min-w-0">
-        <h1 className="text-white font-semibold text-base leading-none truncate">{page.label}</h1>
+        <h1 className="text-slate-900 font-semibold text-base leading-none truncate">{page.label}</h1>
         {page.description && (
-          <p className="text-slate-500 text-xs mt-1 truncate">{page.description}</p>
+          <p className="text-slate-600 text-xs mt-1 truncate">{page.description}</p>
         )}
       </div>
 
       <div className="flex items-center gap-2">
         <button
           onClick={() => setSecurityOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200 hover:text-white hover:border-teal-500/60 hover:bg-slate-800 transition-colors text-xs font-medium"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-white/70 text-slate-700 hover:text-teal-700 hover:border-teal-300 hover:bg-teal-50 transition-colors text-xs font-medium"
         >
           <Shield className="w-3.5 h-3.5" />
           Security
         </button>
-        <button className="relative p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+        <button className="relative p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors">
           <Bell className="w-5 h-5" />
         </button>
-        <div className="w-8 h-8 rounded-full bg-teal-500 flex items-center justify-center text-white text-xs font-bold shadow shadow-teal-500/30">
+        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white text-xs font-bold shadow shadow-teal-500/30">
           PV
         </div>
       </div>
 
       {securityOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm p-4 sm:p-6"
+          className="fixed inset-0 z-50 bg-slate-900/45 backdrop-blur-sm p-4 sm:p-6"
           onClick={() => setSecurityOpen(false)}
         >
           <div
-            className="max-w-2xl mx-auto mt-12 sm:mt-16 rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl"
+            className="max-w-2xl mx-auto mt-12 sm:mt-16 rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-400/30"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-label="Security and backup information"
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-800">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
               <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-teal-400" />
-                <h2 className="text-sm font-semibold text-white">Security and Backups</h2>
+                <Shield className="w-4 h-4 text-teal-600" />
+                <h2 className="text-sm font-semibold text-slate-900">Security and Backups</h2>
               </div>
               <button
                 onClick={() => setSecurityOpen(false)}
-                className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-slate-800"
+                className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                 aria-label="Close security dialog"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="px-5 py-4 space-y-4 text-sm text-slate-300">
+            <div className="px-5 py-4 space-y-4 text-sm text-slate-700">
               <section>
-                <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-400 mb-2">How your information is kept confidential</h3>
+                <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 mb-2">How your information is kept confidential</h3>
                 <ul className="space-y-1.5 list-disc pl-5">
-                  <li>You sign in through Supabase authentication and requests are tied to your account.</li>
-                  <li>Document parsing runs through a server proxy, so API keys are kept on the server and not exposed in your browser.</li>
-                  <li>Uploaded files are stored in your Supabase storage bucket and viewed with time-limited signed links.</li>
-                  <li>Cross-origin access is restricted to approved frontend domains only.</li>
+                  <li>Your information is private and tied to your account login.</li>
+                  <li>We do not sell or publicly share your personal records.</li>
+                  <li>Only approved services needed to run the app (such as hosting, authentication, and storage) process your data.</li>
+                  <li>Uploaded files are protected and opened with temporary secure links.</li>
                 </ul>
               </section>
 
               <section>
-                <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-400 mb-2">How data is backed up</h3>
+                <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 mb-2">Security protocols against hacking</h3>
                 <ul className="space-y-1.5 list-disc pl-5">
-                  <li>Primary storage and backup durability are provided by your configured cloud providers (Supabase and Railway).</li>
-                  <li>For critical records, keep your own secondary backup copy outside this app (for example encrypted external storage).</li>
-                  <li>Review provider backup and retention settings regularly from your provider dashboards.</li>
+                  <li>Data is sent over encrypted connections (HTTPS/TLS) between your device and the service.</li>
+                  <li>Our hosting providers use industry-standard protections like access controls, infrastructure monitoring, and security patching.</li>
+                  <li>Server access is restricted to approved frontend domains and authenticated requests.</li>
+                  <li>No online system can promise zero risk, but we use layered protections to reduce risk as much as possible.</li>
+                </ul>
+              </section>
+
+              <section>
+                <h3 className="text-xs font-semibold tracking-wide uppercase text-slate-500 mb-2">Backups in simple terms</h3>
+                <ul className="space-y-1.5 list-disc pl-5">
+                  <li>Your data is stored in managed cloud systems built for durability.</li>
+                  <li>You can also use the Hard Save button on each page to keep your own local backup copy.</li>
+                  <li>For important records, keep an additional encrypted backup outside the app.</li>
                 </ul>
               </section>
             </div>

@@ -63,22 +63,22 @@ export default function SectionPage({
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader className="w-6 h-6 text-teal-400 animate-spin" />
+        <Loader className="w-6 h-6 text-teal-600 animate-spin" />
       </div>
     )
   }
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="bg-white/80 backdrop-blur border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-sm shadow-slate-200/70">
         <div>
-          <p className="text-sm font-semibold text-white">Hard Save</p>
-          <p className="text-xs text-slate-400">Download a local backup file of this page&apos;s records.</p>
+          <p className="text-sm font-semibold text-slate-900">Hard Save</p>
+          <p className="text-xs text-slate-600">Download a local backup file of this page&apos;s records.</p>
         </div>
         <button
           type="button"
           onClick={handleHardSave}
-          className="inline-flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-400 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+          className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
           Hard Save This Page
@@ -86,13 +86,13 @@ export default function SectionPage({
       </div>
 
       {hardSaveMessage && (
-        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <p className="text-sm text-emerald-400">{hardSaveMessage}</p>
+        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+          <p className="text-sm text-emerald-700">{hardSaveMessage}</p>
         </div>
       )}
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+      <div className="bg-white/80 backdrop-blur border border-slate-200 rounded-2xl p-5 shadow-sm shadow-slate-200/70">
         <UploadDropZone
           section={sectionKey}
           userId={session.user.id}
@@ -102,9 +102,9 @@ export default function SectionPage({
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 rounded-xl p-3">
-          <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl p-3">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 

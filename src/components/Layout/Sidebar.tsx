@@ -45,22 +45,22 @@ export default function Sidebar({ session, open, onClose }: SidebarProps) {
 
       <aside className={`
         fixed top-0 left-0 h-full z-30 flex flex-col
-        w-64 bg-slate-900 border-r border-slate-800
+        w-64 bg-white/85 backdrop-blur border-r border-slate-200 shadow-xl shadow-slate-300/40
         transition-transform duration-300
         lg:translate-x-0 lg:static lg:z-auto
         ${open ? 'translate-x-0' : '-translate-x-full'}
       `}>
-        <div className="flex items-center justify-between px-5 py-5 border-b border-slate-800">
+        <div className="flex items-center justify-between px-5 py-5 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-teal-500 flex items-center justify-center shadow-lg shadow-teal-500/30">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
               <Vault className="w-5 h-5 text-white" />
             </div>
             <div>
-              <p className="text-white font-bold text-sm tracking-wide leading-none">Parent Vault</p>
-              <p className="text-teal-400 text-xs mt-0.5 truncate max-w-[120px]">{session.user.email}</p>
+              <p className="text-slate-900 font-bold text-sm tracking-wide leading-none">Parent Vault</p>
+              <p className="text-teal-700 text-xs mt-0.5 truncate max-w-[120px]">{session.user.email}</p>
             </div>
           </div>
-          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white">
+          <button onClick={onClose} className="lg:hidden text-slate-500 hover:text-slate-900">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -75,8 +75,8 @@ export default function Sidebar({ session, open, onClose }: SidebarProps) {
               className={({ isActive }) => `
                 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150
                 ${isActive
-                  ? 'bg-teal-500/15 text-teal-400 border border-teal-500/20'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800'}
+                  ? 'bg-teal-50 text-teal-700 border border-teal-200 shadow-sm'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'}
               `}
             >
               <Icon className="w-4.5 h-4.5 shrink-0" />
@@ -85,10 +85,10 @@ export default function Sidebar({ session, open, onClose }: SidebarProps) {
           ))}
         </nav>
 
-        <div className="p-3 border-t border-slate-800">
+        <div className="p-3 border-t border-slate-200">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150"
+            className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
           >
             <LogOut className="w-4.5 h-4.5" />
             Sign Out

@@ -1,1 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
+
+:root {
+	color-scheme: light;
+}
+
+html,
+body,
+#root {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: 'Plus Jakarta Sans', 'Avenir Next', 'Segoe UI', sans-serif;
+	color: #10233f;
+	background:
+		radial-gradient(circle at 12% 10%, rgba(20, 184, 166, 0.14), transparent 36%),
+		radial-gradient(circle at 92% 88%, rgba(59, 130, 246, 0.16), transparent 34%),
+		linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
+}
+
+* {
+	box-sizing: border-box;
+}

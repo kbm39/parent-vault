@@ -21,8 +21,8 @@ export default function Dashboard({ session }: { session: Session }) {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-        <p className="text-slate-400 text-sm mt-1">{email}</p>
+        <h1 className="text-2xl font-bold text-slate-900">Welcome back</h1>
+        <p className="text-slate-600 text-sm mt-1">{email}</p>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -30,12 +30,12 @@ export default function Dashboard({ session }: { session: Session }) {
           <Link
             key={path}
             to={path}
-            className="flex flex-col items-center gap-3 p-5 bg-slate-900 border border-slate-800 rounded-2xl hover:border-slate-600 transition-colors"
+            className="flex flex-col items-center gap-3 p-5 bg-white/80 backdrop-blur border border-slate-200 rounded-2xl hover:border-teal-300 hover:shadow-lg hover:shadow-teal-100/70 transition-all"
           >
             <div className={`w-12 h-12 rounded-xl ${bg} flex items-center justify-center`}>
               <Icon className={`w-6 h-6 ${color}`} />
             </div>
-            <span className="text-sm font-medium text-slate-300">{label}</span>
+            <span className="text-sm font-medium text-slate-700">{label}</span>
           </Link>
         ))}
       </div>
