@@ -11,6 +11,29 @@ export default function Login() {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [successMsg, setSuccessMsg] = useState('')
 
+  const resendVerification = async () => {
+    if (!email) {
+      setError('Enter your email first, then tap resend verification.')
+      return
+    }
+
+    setError('')
+    setSuccessMsg('')
+    setLoading(true)
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email,
+      })
+      if (error) throw error
+      setSuccessMsg('Verification email sent. Check your inbox and spam folder.')
+    } catch (err: any) {
+      setError(err.message || 'Could not resend verification email')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -23,10 +46,15 @@ export default function Login() {
       } else {
         const { error } = await supabase.auth.signUp({ email, password })
         if (error) throw error
-        setSuccessMsg('Check your email for a confirmation link.')
+        setSuccessMsg('Account created. Check your email for a confirmation link before signing in.')
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred')
+      const message = err?.message || 'An error occurred'
+      if (/email.*not.*confirm/i.test(message)) {
+        setError('Your email is not verified yet. Please check your inbox for the confirmation email.')
+      } else {
+        setError(message)
+      }
     } finally {
       setLoading(false)
     }
@@ -111,6 +139,16 @@ export default function Login() {
             >
               {mode === 'signin' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>
+            {mode === 'signin' && (
+              <button
+                type="button"
+                onClick={resendVerification}
+                disabled={loading}
+                className="block w-full mt-2 text-sm text-teal-400 hover:text-teal-300 disabled:text-teal-400/50 transition-colors"
+              >
+                Resend verification email
+              </button>
+            )}
           </div>
         </div>
         <p className="text-center text-xs text-slate-600 mt-6">

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import type { LucideIcon } from 'lucide-react'
-import { Loader, AlertCircle } from 'lucide-react'
+import { Loader, AlertCircle, Download, CheckCircle2 } from 'lucide-react'
 import UploadDropZone from './UploadDropZone'
 import SectionCard from './SectionCard'
 import { useSectionData } from '../../hooks/useSectionData'
@@ -36,8 +36,29 @@ export default function SectionPage({
 }: SectionPageProps) {
   const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useSectionData(session, tableName)
   const [prefillData, setPrefillData] = useState<Record<string, string> | null>(null)
+  const [hardSaveMessage, setHardSaveMessage] = useState('')
 
   const allFields = groups.flatMap(g => g.fields)
+
+  const handleHardSave = () => {
+    const payload = {
+      section: sectionKey,
+      exportedAt: new Date().toISOString(),
+      entryCount: entries.length,
+      entries,
+    }
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-')
+    a.href = url
+    a.download = `${sectionKey}-hard-save-${stamp}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    setHardSaveMessage(`Hard save downloaded (${entries.length} entr${entries.length === 1 ? 'y' : 'ies'}).`)
+  }
 
   if (loading) {
     return (
@@ -49,6 +70,28 @@ export default function SectionPage({
 
   return (
     <div className="max-w-3xl mx-auto space-y-5">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-white">Hard Save</p>
+          <p className="text-xs text-slate-400">Download a local backup file of this page&apos;s records.</p>
+        </div>
+        <button
+          type="button"
+          onClick={handleHardSave}
+          className="inline-flex items-center justify-center gap-2 bg-teal-500 hover:bg-teal-400 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors"
+        >
+          <Download className="w-3.5 h-3.5" />
+          Hard Save This Page
+        </button>
+      </div>
+
+      {hardSaveMessage && (
+        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3">
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <p className="text-sm text-emerald-400">{hardSaveMessage}</p>
+        </div>
+      )}
+
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5">
         <UploadDropZone
           section={sectionKey}

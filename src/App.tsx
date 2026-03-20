@@ -16,14 +16,22 @@ import AccessCodes from './components/sections/AccessCodes'
 import Digital from './components/sections/Digital'
 import Contacts from './components/sections/Contacts'
 
+function isEmailVerified(session: Session | null) {
+  if (!session) return false
+  return Boolean(session.user.email_confirmed_at ?? session.user.confirmed_at)
+}
+
 function ProtectedRoute({ session, children }: { session: Session | null; children: React.ReactNode }) {
   if (!session) return <Navigate to="/login" replace />
+  if (!isEmailVerified(session)) return <Navigate to="/login?verify=1" replace />
+
   return <>{children}</>
 }
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const emailVerified = isEmailVerified(session)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -50,7 +58,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/login" element={session && emailVerified ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/" element={
           <ProtectedRoute session={session}>
             <Layout session={session!} />
