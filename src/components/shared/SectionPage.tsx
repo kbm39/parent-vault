@@ -4,6 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 import { Loader, AlertCircle, Download, CheckCircle2 } from 'lucide-react'
 import UploadDropZone from './UploadDropZone'
 import SectionCard from './SectionCard'
+import type { AccountEntry } from './SectionCard'
 import { useSectionData } from '../../hooks/useSectionData'
 
 interface FieldDef {
@@ -29,10 +30,11 @@ interface SectionPageProps {
   icon: LucideIcon
   iconColor: string
   groups: CardGroup[]
+  renderSummary?: (entries: AccountEntry[]) => React.ReactNode
 }
 
 export default function SectionPage({
-  session, tableName, sectionKey, groups
+  session, tableName, sectionKey, groups, renderSummary
 }: SectionPageProps) {
   const { entries, loading, error, addEntry, updateEntry, deleteEntry } = useSectionData(session, tableName)
   const [prefillData, setPrefillData] = useState<Record<string, string> | null>(null)
@@ -91,6 +93,8 @@ export default function SectionPage({
           <p className="text-sm text-emerald-700">{hardSaveMessage}</p>
         </div>
       )}
+
+      {renderSummary?.(entries)}
 
       <div className="bg-white/80 backdrop-blur border border-slate-200 rounded-2xl p-5 shadow-sm shadow-slate-200/70">
         <UploadDropZone
