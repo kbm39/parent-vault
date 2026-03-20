@@ -133,12 +133,17 @@ async function requireAuth(req, res, next) {
 function validateParseBody(body) {
   if (!body || typeof body !== 'object') return 'Missing request body'
 
-  const { type, content, fields, sectionName } = body
+  const { type, content, fields, sectionName, mediaType } = body
 
-  if (type !== 'base64' && type !== 'text') return 'Invalid type'
+  if (type !== 'base64' && type !== 'text' && type !== 'image') return 'Invalid type'
   if (typeof content !== 'string' || !content.trim()) return 'Missing or invalid content'
   if (!Array.isArray(fields) || fields.length === 0) return 'Missing or invalid fields'
   if (fields.length > 50) return 'Too many fields requested'
+  if (type === 'image') {
+    if (typeof mediaType !== 'string' || !/^image\/[a-zA-Z0-9.+-]+$/.test(mediaType)) {
+      return 'Invalid or missing mediaType for image content'
+    }
+  }
   if (sectionName != null && (typeof sectionName !== 'string' || sectionName.length > 80)) {
     return 'Invalid sectionName'
   }
@@ -153,6 +158,7 @@ function validateParseBody(body) {
   // Reasonable body caps by content type to reduce abuse and accidental huge payloads.
   if (type === 'text' && content.length > 300_000) return 'Text content too large'
   if (type === 'base64' && content.length > 14_000_000) return 'Base64 content too large'
+  if (type === 'image' && content.length > 14_000_000) return 'Image base64 content too large'
 
   return null
 }
@@ -187,7 +193,7 @@ app.post('/api/parse', rateLimit, requireAuth, async (req, res) => {
     return res.status(400).json({ error: validationError })
   }
 
-  const { type, content, fields, sectionName } = req.body
+  const { type, content, fields, sectionName, mediaType } = req.body
 
   try {
     logEvent('info', 'parse_request_received', {
@@ -208,6 +214,15 @@ app.post('/api/parse', rateLimit, requireAuth, async (req, res) => {
         source: {
           type: 'base64',
           media_type: 'application/pdf',
+          data: content
+        }
+      })
+    } else if (type === 'image') {
+      userMessageParts.push({
+        type: 'image',
+        source: {
+          type: 'base64',
+          media_type: mediaType,
           data: content
         }
       })

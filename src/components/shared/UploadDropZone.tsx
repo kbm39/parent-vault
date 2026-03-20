@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react'
 import { supabase } from '../../lib/supabase'
-import { parseDocumentWithAI, parseTextWithAI } from '../../lib/parseWithAI'
-import { extractTextFromImage } from '../../lib/ocr'
+import { parseDocumentWithAI, parseImageWithAI } from '../../lib/parseWithAI'
 import { Upload, File, X, CheckCircle, AlertCircle, Loader, Sparkles } from 'lucide-react'
 
 interface FieldDef {
@@ -83,8 +82,7 @@ export default function UploadDropZone({ section, userId, fields, onExtracted }:
         setUploading(false)
         setParsing(true)
         try {
-          const text = await extractTextFromImage(file)
-          const extracted = await parseTextWithAI(text, fields, section)
+          const extracted = await parseImageWithAI(file, fields, section)
           console.log('Extracted from image:', extracted)
           if (Object.keys(extracted).length === 0) {
             setError('No information could be extracted from this image.')

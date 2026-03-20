@@ -87,3 +87,33 @@ export async function parseTextWithAI(
   const data = await resp.json()
   return data.parsed ?? {}
 }
+
+export async function parseImageWithAI(
+  file: File,
+  fields: FieldDef[],
+  sectionName: string
+): Promise<Record<string, string>> {
+  const proxyBase = import.meta.env.VITE_PARSE_PROXY_URL || 'http://localhost:4001'
+
+  const arrayBuffer = await file.arrayBuffer()
+  const bytes = new Uint8Array(arrayBuffer)
+  let binary = ''
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i])
+  const base64 = btoa(binary)
+  const headers = await getParseHeaders()
+
+  const mediaType = file.type || 'image/jpeg'
+  const resp = await fetch(`${proxyBase}/api/parse`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ type: 'image', mediaType, content: base64, fields, sectionName })
+  })
+
+  if (!resp.ok) {
+    const txt = (await resp.text()) || '[empty]'
+    throw new Error(`Parse proxy failed: ${resp.status} ${resp.statusText}: ${txt}`)
+  }
+
+  const data = await resp.json()
+  return data.parsed ?? {}
+}
