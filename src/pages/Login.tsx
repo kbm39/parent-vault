@@ -377,6 +377,17 @@ export default function Login() {
                     <p className="text-xs text-slate-500 uppercase tracking-wide">Manual setup key</p>
                     <p className="text-sm text-slate-800 font-mono break-all mt-1">{mfaSecret}</p>
                     <p className="mt-2 text-xs leading-5 text-slate-500">On iPhone, you can open Passwords, choose Set Up Verification Code, and enter this key manually.</p>
+                    <details className="mt-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-left">
+                      <summary className="cursor-pointer text-sm font-medium text-slate-700">How on iPhone</summary>
+                      <div className="mt-3 space-y-2 text-sm leading-6 text-slate-600">
+                        <p>1. Open the Passwords app on your iPhone.</p>
+                        <p>2. Create or open the saved login you want to use for Parent Vault.</p>
+                        <p>3. Tap Set Up Verification Code.</p>
+                        <p>4. Tap Enter Setup Key.</p>
+                        <p>5. Paste or type the manual setup key shown above.</p>
+                        <p>6. Passwords will generate the 6-digit code you enter below.</p>
+                      </div>
+                    </details>
                   </div>
                 )}
                 {pendingRecoveryCodes.length > 0 && (
