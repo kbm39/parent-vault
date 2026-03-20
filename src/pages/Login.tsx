@@ -17,6 +17,7 @@ export default function Login() {
   const [mfaFactorId, setMfaFactorId] = useState('')
   const [mfaChallengeId, setMfaChallengeId] = useState('')
   const [mfaQrSvg, setMfaQrSvg] = useState('')
+  const [mfaQrFailed, setMfaQrFailed] = useState(false)
   const [mfaSecret, setMfaSecret] = useState('')
   const [mfaCode, setMfaCode] = useState('')
   const [useRecoveryCode, setUseRecoveryCode] = useState(false)
@@ -28,6 +29,7 @@ export default function Login() {
     setMfaFactorId('')
     setMfaChallengeId('')
     setMfaQrSvg('')
+    setMfaQrFailed(false)
     setMfaSecret('')
     setMfaCode('')
     setUseRecoveryCode(false)
@@ -189,10 +191,11 @@ export default function Login() {
 
           setMfaFactorId(enrollData.id)
           setMfaQrSvg(enrollData.totp.qr_code)
+          setMfaQrFailed(false)
           setMfaSecret(enrollData.totp.secret)
           setPendingRecoveryCodes(generatedCodes)
           setMfaStep('enroll')
-          setSuccessMsg('Set up your authenticator app, save your recovery codes, then enter the 6-digit code.')
+          setSuccessMsg('No text or email code is sent. Open your authenticator app, then enter the 6-digit code it generates.')
         }
 
         return
@@ -210,6 +213,19 @@ export default function Login() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const buildQrDataUrl = (svg: string) => {
+    try {
+      const utf8 = new TextEncoder().encode(svg)
+      let binary = ''
+      utf8.forEach((byte) => {
+        binary += String.fromCharCode(byte)
+      })
+      return `data:image/svg+xml;base64,${btoa(binary)}`
+    } catch {
+      return ''
     }
   }
 
@@ -266,9 +282,9 @@ export default function Login() {
             </h2>
             <p className="text-sm text-slate-600 mb-6">
               {mfaStep === 'enroll'
-                ? 'Scan this QR code in an authenticator app, then enter the 6-digit code to secure your account.'
+                ? 'Scan this QR code in an authenticator app. The app generates the 6-digit code you enter below.'
                 : mfaStep === 'verify'
-                ? 'Enter the 6-digit code from your authenticator app to complete sign in.'
+                ? 'Enter the 6-digit code from your authenticator app to complete sign in. No code is sent by text or email.'
                 : mode === 'signin'
                 ? 'Pick up where you left off and keep everything in one secure, organized place.'
                 : 'Start building a clear record your family can rely on when it matters most.'}
@@ -335,12 +351,16 @@ export default function Login() {
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                 {mfaQrSvg ? (
                   <img
-                    src={`data:image/svg+xml;utf8,${encodeURIComponent(mfaQrSvg)}`}
+                    src={buildQrDataUrl(mfaQrSvg)}
                     alt="Scan this QR code in your authenticator app"
+                    onError={() => setMfaQrFailed(true)}
                     className="w-44 h-44 mx-auto rounded-lg border border-slate-200 bg-white p-2"
                   />
                 ) : (
                   <p className="text-sm text-slate-600">QR code unavailable. Use the setup key below.</p>
+                )}
+                {mfaQrFailed && (
+                  <p className="mt-3 text-sm text-slate-600 text-center">QR image could not be displayed in this browser. Use the manual setup key below in Google Authenticator, Microsoft Authenticator, or Authy.</p>
                 )}
                 {mfaSecret && (
                   <div className="mt-3 text-center">
