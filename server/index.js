@@ -29,15 +29,25 @@ function logEvent(level, event, meta = {}) {
 }
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || ''
+function normalizeOrigin(value) {
+  if (!value) return ''
+  const trimmed = value.trim().replace(/\/$/, '')
+  try {
+    return new URL(trimmed).origin
+  } catch {
+    return trimmed
+  }
+}
+
 const allowedFrontendOrigins = FRONTEND_ORIGIN
   .split(',')
-  .map((v) => v.trim())
+  .map((v) => normalizeOrigin(v))
   .filter(Boolean)
 const isDev = process.env.NODE_ENV !== 'production'
 
 function isAllowedOrigin(origin) {
   if (!origin) return true
-  if (allowedFrontendOrigins.length > 0) return allowedFrontendOrigins.includes(origin)
+  if (allowedFrontendOrigins.length > 0) return allowedFrontendOrigins.includes(normalizeOrigin(origin))
   if (isDev) return /^https?:\/\/localhost:\d+$/.test(origin)
   return false
 }
